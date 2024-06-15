@@ -13,15 +13,28 @@ class EventController extends Controller
 
     public function store(Request $request)
     {
+        dd($request);
         $request->validate([
 
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:255',
             'date' => 'required|date',
-            'time' => 'required|date_format:H:i',
+            'dateEnd' => 'date',
+            'timeStart' => 'required|date_format:H:i',
+            'timeEnd' => 'date_format:H:i',
+
         ]);
 
-        $event = Event::create($request->all());
+        $event = Event::create(
+            [
+                'title' => $request->title,
+                'description' => $request->description,
+                'date' => $request->date,
+                'dateEnd' => $request->dateEnd,
+                'timeStart' => $request->timeStart,
+                'timeEnd' => $request->timeEnd,
+            ]
+        );
 
         return response()->json($event, 201);
     }

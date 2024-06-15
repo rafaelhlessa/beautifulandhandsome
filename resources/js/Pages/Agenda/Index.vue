@@ -20,6 +20,7 @@ const data = () => {
 
 const startHour = '09:00'
 const endHour = '20:00'
+const intervalAtendece = '00:30'
 
 const daysOfWeek = [1, 2, 3, 4, 5, 6];
 
@@ -27,8 +28,11 @@ const daysOfWeek = [1, 2, 3, 4, 5, 6];
 const newEvent = ref({
     name: '',
     title: '',
-    date: '',
-    time: '',
+    dateStart: '',
+    dateEnd: '',
+    timeStart: '',
+    timeEnd: '',
+    interval: intervalAtendece,
 })
 
 // Função para buscar eventos do servidor
@@ -48,7 +52,7 @@ const addEvent = async () => {
         console.log('Evento adicionado:', response.data)
         calendarOptions.value.events.push(response.data)
         // showModal.value = false
-        newEvent.value = { name: '', description: '', date: '', time: '' }
+        newEvent.value = { name: '', description: '', dateStart: '', dateEnd: '', timeStart: '', timeEnd: '' }
     } catch (error) {
         console.error('Erro ao adicionar evento:', error)
     }
@@ -65,7 +69,8 @@ const handleDateClick = (info) => {
 
 // Função para lidar com seleção de intervalo
 const handleSelect = (info) => {
-    newEvent.value.date = info.startStr
+    newEvent.value.dateStart = info.startStr
+    newEvent.value.dateEnd = info.endStr
     filterTimeOptions()
     //   showModal.value = true
     // alert('selected ' + info.startStr + ' to ' + info.endStr);
@@ -73,12 +78,31 @@ const handleSelect = (info) => {
 
 const calendarOptions = ref({
     plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
-    initialView: 'dayGridMonth',
+    initialView: 'timeGridDay',
     locales: allLocales,
     locale: 'pt-br',
     dateClick: handleDateClick,
     select: handleSelect,
+    slotDuration: intervalAtendece,
+    slotMinTime: startHour,
+    slotMaxTime: endHour,
     selectable: true,
+    selectOverlap: false,
+    views: {
+        timeGridFourDay: {
+        type: 'timeGrid',
+        duration: { days: 5 },
+        buttonText: '5 dias'
+        }
+    },
+    navLinks: true,
+    navLinkDayClick: function(date, jsEvent) {
+        console.log('day', date.toISOString());
+        console.log('coords', jsEvent.pageX, jsEvent.pageY);
+    },
+    headerToolbar: {
+        center: 'dayGridMonth,timeGridFourDay' // buttons for switching between views
+    },
     events: [
         // event data
     ],
@@ -98,6 +122,7 @@ const generateTimeOptions = () => {
   const startTime = 9 * 60 // 9:00 em minutos
   const endTime = 20 * 60 // 20:00 em minutos
   const interval = 30 // Intervalo de 30 minutos
+
 
   for (let time = startTime; time <= endTime; time += interval) {
     const hours = Math.floor(time / 60)
@@ -196,14 +221,14 @@ watch(() => newEvent.value.date, filterTimeOptions)
                                                 <div class="relative my-4">
                                                     <label for="date"
                                                         class="absolute -top-2 left-2 inline-block bg-white px-1 text-xs font-medium text-gray-900">Data</label>
-                                                    <input type="date" name="date" id="date" v-model="newEvent.date" required @change="filterTimeOptions"
+                                                    <input type="date" name="date" id="date" v-model="newEvent.dateStart" required @change="filterTimeOptions"
                                                         class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
                                                 </div>
 
                                                 <div class="relative my-4">
                                                     <label for="time"
                                                         class="absolute -top-2 left-2 inline-block bg-white px-1 text-xs font-medium text-gray-900">Hora</label>
-                                                    <select name="time" id="time" v-model="newEvent.time" required
+                                                    <select name="time" id="time" v-model="newEvent.timeStart" required
                                                         class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
                                                         <option v-for="time in timeOptions" :key="time" :value="time">
                                                             {{ time }}
