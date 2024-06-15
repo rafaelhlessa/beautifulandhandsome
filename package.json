@@ -16,5 +16,13 @@
         "tailwindcss": "^3.2.1",
         "vite": "^5.0",
         "vue": "^3.4.0"
+    },
+    "dependencies": {
+        "@fullcalendar/core": "^6.1.13",
+        "@fullcalendar/daygrid": "^6.1.13",
+        "@fullcalendar/interaction": "^6.1.13",
+        "@fullcalendar/timegrid": "^6.1.13",
+        "@fullcalendar/vue3": "^6.1.13",
+        "@headlessui/vue": "^1.7.22"
     }
 }
