@@ -9,6 +9,10 @@ import allLocales from '@fullcalendar/core/locales-all'
 import { ref, onMounted, watch } from 'vue'
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue'
 // import { CheckIcon } from '@heroicons/vue/24/outline'
+import moment from 'moment'
+import { Switch } from '@headlessui/vue'
+
+const enabled = ref(false)
 
 const open = ref(false)
 
@@ -28,12 +32,14 @@ const daysOfWeek = [1, 2, 3, 4, 5, 6];
 const newEvent = ref({
     name: '',
     title: '',
-    dateStart: '',
-    dateEnd: '',
+    start: '',
+    end: '',
     timeStart: '',
     timeEnd: '',
     interval: intervalAtendece,
 })
+
+const atendenceStart = ref('')
 
 // Função para buscar eventos do servidor
 const fetchEvents = async () => {
@@ -52,7 +58,7 @@ const addEvent = async () => {
         console.log('Evento adicionado:', response.data)
         calendarOptions.value.events.push(response.data)
         // showModal.value = false
-        newEvent.value = { name: '', description: '', dateStart: '', dateEnd: '', timeStart: '', timeEnd: '' }
+        newEvent.value = { name: '', description: '', start: '', end: '' }
     } catch (error) {
         console.error('Erro ao adicionar evento:', error)
     }
@@ -63,7 +69,18 @@ const handleDateClick = (info) => {
     newEvent.value.date = info.dateStr
     filterTimeOptions()
     //   showModal.value = true
-    // alert('clicked ' + info.dateStr);
+    // alert('clicked ' + moment(info.dateStr).format('HH:mm'));
+    atendenceStart.value = moment(info.dateStr).format('HH:mm')
+    open.value = true
+    console.log('Hora Inicial:', atendenceStart.value)
+}
+
+// Função para lidar com clique em data
+const handleHourClick = (info) => {
+    newEvent.value.date = info.dateStr
+    filterTimeOptions()
+    //   showModal.value = true
+    alert('clicked ' + moment(info.dateStr).format('HH:mm'));
     open.value = true
 }
 
@@ -78,7 +95,8 @@ const handleSelect = (info) => {
 
 const calendarOptions = ref({
     plugins: [dayGridPlugin, interactionPlugin, timeGridPlugin],
-    initialView: 'timeGridDay',
+    initialView: 'timeGridWeek',
+    timeZone: 'America/Sao_Paulo',
     locales: allLocales,
     locale: 'pt-br',
     dateClick: handleDateClick,
@@ -95,22 +113,56 @@ const calendarOptions = ref({
         buttonText: '5 dias'
         }
     },
+    headerToolbar: {
+      left: 'prev,next today',
+      center: 'title',
+      right: 'dayGridMonth,timeGridWeek,timeGridDay,timeGridFourDay'
+    },
+    editable: true,
+    dayMaxEvents: true,
+    eventClick: function(info) {
+      var eventObj = info.event;
+
+      if (eventObj.url) {
+        alert(
+          'Clicked ' + eventObj.title + '.\n' +
+          'Will open ' + eventObj.url + ' in a new tab'
+        );
+
+        window.open(eventObj.url);
+
+        info.jsEvent.preventDefault(); // prevents browser from following link in current tab.
+      } else {
+        alert('Clicked ' + eventObj.title);
+      }
+    },
     navLinks: true,
     navLinkDayClick: function(date, jsEvent) {
         console.log('day', date.toISOString());
-        console.log('coords', jsEvent.pageX, jsEvent.pageY);
     },
-    headerToolbar: {
-        center: 'dayGridMonth,timeGridFourDay' // buttons for switching between views
-    },
+    // headerToolbar: {
+    //     center: 'dayGridMonth,timeGridFourDay' // buttons for switching between views
+    // },
     events: [
         // event data
     ],
-    businessHours: {
+    businessHours: [
+        {
+        daysOfWeek: [ 1, 2, 3, 4, 5],
         startTime: startHour,
         endTime: endHour,
-        daysOfWeek: daysOfWeek
-    }
+        },
+        {
+        daysOfWeek: [6],
+        startTime: '08:00',
+        endTime: '14:00',
+        }
+    ]
+    // businessHours: {
+    //     startTime: startHour,
+    //     endTime: endHour,
+    //     daysOfWeek: daysOfWeek
+    // }
 });
 
 
@@ -218,24 +270,61 @@ watch(() => newEvent.value.date, filterTimeOptions)
                                                         placeholder="Corte, barba, unha" />
                                                 </div>
 
-                                                <div class="relative my-4">
+                                                <div class="grid grid-cols-2 gap-4">
+                                                    <div class="relative my-4">
                                                     <label for="date"
                                                         class="absolute -top-2 left-2 inline-block bg-white px-1 text-xs font-medium text-gray-900">Data</label>
-                                                    <input type="date" name="date" id="date" v-model="newEvent.dateStart" required @change="filterTimeOptions"
+                                                    <input type="date" name="date" id="date" v-model="newEvent.start" required @change="filterTimeOptions"
                                                         class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" />
-                                                </div>
+                                                    </div>
 
-                                                <div class="relative my-4">
+                                                    <div class="relative my-4">
+                                                        <label for="date" class="absolute -top-2 left-2 inline-block bg-white px-1 text-xs font-medium text-gray-900">Horário Alternativo:</label>
+                                                        <div class="pt-3">
+                                                            <Switch v-model="enabled" :class="[enabled ? 'bg-indigo-600' : 'bg-gray-200', 'relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:ring-offset-2']">
+                                                                <span class="sr-only">Use setting</span>
+                                                                <span :class="[enabled ? 'translate-x-5' : 'translate-x-0', 'pointer-events-none relative inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out']">
+                                                                <span :class="[enabled ? 'opacity-0 duration-100 ease-out' : 'opacity-100 duration-200 ease-in', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                                                    <svg class="h-3 w-3 text-gray-400" fill="none" viewBox="0 0 12 12">
+                                                                    <path d="M4 8l2-2m0 0l2-2M6 6L4 4m2 2l2 2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                                                    </svg>
+                                                                </span>
+                                                                <span :class="[enabled ? 'opacity-100 duration-200 ease-in' : 'opacity-0 duration-100 ease-out', 'absolute inset-0 flex h-full w-full items-center justify-center transition-opacity']" aria-hidden="true">
+                                                                    <svg class="h-3 w-3 text-indigo-600" fill="currentColor" viewBox="0 0 12 12">
+                                                                    <path d="M3.707 5.293a1 1 0 00-1.414 1.414l1.414-1.414zM5 8l-.707.707a1 1 0 001.414 0L5 8zm4.707-3.293a1 1 0 00-1.414-1.414l1.414 1.414zm-7.414 2l2 2 1.414-1.414-2-2-1.414 1.414zm3.414 2l4-4-1.414-1.414-4 4 1.414 1.414z" />
+                                                                    </svg>
+                                                                </span>
+                                                                </span>
+                                                            </Switch>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div v-if="enabled === true" class="grid grid-cols-2 gap-4">
+                                                    <div class="relative my-4">
                                                     <label for="time"
-                                                        class="absolute -top-2 left-2 inline-block bg-white px-1 text-xs font-medium text-gray-900">Hora</label>
-                                                    <select name="time" id="time" v-model="newEvent.timeStart" required
-                                                        class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
-                                                        <option v-for="time in timeOptions" :key="time" :value="time">
-                                                            {{ time }}
-                                                        </option>
-                                                    </select>
+                                                        class="absolute -top-2 left-2 inline-block bg-white px-1 text-xs font-medium text-gray-900">Hora Inicio</label>
+                                                        <select name="time" id="time" v-model="newEvent.timeStart" required
+                                                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                                                            <option v-for="time in timeOptions" :key="time" :value="time">
+                                                                {{ time }}
+                                                            </option>
+                                                        </select>
+                                                    </div>
 
+                                                    <div class="relative my-4">
+                                                    <label for="time"
+                                                        class="absolute -top-2 left-2 inline-block bg-white px-1 text-xs font-medium text-gray-900">Hora Fim</label>
+                                                        <select name="time" id="time" v-model="newEvent.timeStart" required
+                                                            class="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                                                            <option v-for="time in timeOptions" :key="time" :value="time">
+                                                                {{ time }}
+                                                            </option>
+                                                        </select>
+                                                    </div>
                                                 </div>
+
+
+
 
                                                 <div
                                                     class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">

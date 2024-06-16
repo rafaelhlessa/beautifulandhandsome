@@ -18,10 +18,9 @@ class EventController extends Controller
 
             'title' => 'required|string|max:255',
             'description' => 'required|string|max:255',
-            'date' => 'required|date',
-            'dateEnd' => 'date',
-            'timeStart' => 'required|date_format:H:i',
-            'timeEnd' => 'date_format:H:i',
+            'start' => 'required|date',
+            'end' => 'date',
+
 
         ]);
 
@@ -29,10 +28,10 @@ class EventController extends Controller
             [
                 'title' => $request->title,
                 'description' => $request->description,
-                'date' => $request->date,
-                'dateEnd' => $request->dateEnd,
-                'timeStart' => $request->timeStart,
-                'timeEnd' => $request->timeEnd,
+                'start' => $request->date,
+                'end' => $request->dateEnd,
+                'user_id' => Auth::id(),
+
             ]
         );
 

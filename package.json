@@ -23,6 +23,7 @@
         "@fullcalendar/interaction": "^6.1.13",
         "@fullcalendar/timegrid": "^6.1.13",
         "@fullcalendar/vue3": "^6.1.13",
-        "@headlessui/vue": "^1.7.22"
+        "@headlessui/vue": "^1.7.22",
+        "vue-moment": "^4.1.0"
     }
 }

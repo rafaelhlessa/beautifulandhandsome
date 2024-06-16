@@ -15,10 +15,9 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->string('description')->nullable();
-            $table->date('date');
-            $table->date('dateEnd')->nullable();
-            $table->time('time');
-            $table->time('timeEnd')->nullable();
+            $table->date('start');
+            $table->date('end');
+            $table->foreignId('user_id')->constrained();
             $table->timestamps();
         });
     }
